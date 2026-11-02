@@ -48,15 +48,21 @@ migrations and no routes.
 1. Wrap model output in a `Pushery\AiContentMarking\MarkedText` where it comes back:
    `MarkedText::generated($text)` for text the model wrote, `MarkedText::edited($text)` for text
    a person wrote and the model rewrote.
+   Where they are known, pass `generator:` (the system), `model:` and `operator:` (the company
+   that runs the system): each is a field of its own in the marking's JSON form.
 2. In a view, render `{{ $text->html() }}` where the text is shown as content. It writes the
    escaped text inside schema.org microdata that names the term.
 3. Place `<x-ai-content-marking::notice :marking="$text->marking" />` where readers should see
-   the notice.
+   the notice. For another place, such as an export that names the model, pass `form="export"`
+   and write the sentence under `notice.forms.export.<term>` in the published translations.
 4. In an API resource, return the `MarkedText` where the client should receive the marking: it
-   serializes to the text beside the marking's values.
+   serializes to the text beside the marking's values. Add
+   `Pushery\AiContentMarking\Http\HttpMarking::headers($text->marking)` to the response's
+   headers where a client reads them before the body.
 5. To keep the marking with a record, cast a JSON column to `Pushery\AiContentMarking\Marking`.
 6. For an image, write the marking with `Pushery\AiContentMarking\Images\ImageMarker`; the
-   conversions of `spatie/laravel-medialibrary` keep it.
+   conversions of `spatie/laravel-medialibrary` keep it. For a Word document, write it with
+   `Pushery\AiContentMarking\Documents\DocumentMarker`, which puts it in the custom properties.
 7. For a mail, return `new Headers(text: MailMarking::headers($marking))` from the mailable's
    `headers()`, or add the field in `withSymfonyMessage()`. `MailMarkingReader` reads it back and
    names the DKIM signatures that list it.
@@ -69,7 +75,7 @@ migrations and no routes.
 ```php
 use Pushery\AiContentMarking\MarkedText;
 
-$description = MarkedText::generated($response->text, generator: 'Amazon Bedrock', at: now());
+$description = MarkedText::generated($response->text, generator: 'Support Desk', at: now(), model: 'example-writer', operator: 'Example Ltd');
 ```
 
 ```blade

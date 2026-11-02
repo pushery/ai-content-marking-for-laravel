@@ -36,12 +36,21 @@ final readonly class Notice
     ) {}
 
     /**
-     * The words for a marking in the given locale, or null where the configuration shows no notice
-     * for its source type.
+     * The words for a marking in the given locale and form, or null where the configuration shows
+     * no notice for its source type.
      *
-     * @throws InvalidArgumentException when a source type that gets a notice has no words in the translations
+     * Without a form the words are the line beside a result, `notice.<term>`. A form names a sentence
+     * of its own, `notice.forms.<form>.<term>`, for a place that says something else: where a person
+     * starts to work with a generating system, in an export that travels without the screen, or about
+     * the product rather than one result. The package ships the line beside a result; an application
+     * writes the forms it needs into its published translations.
+     *
+     * A sentence can name the values of the marking as `:generator`, `:model` and `:operator`. One that
+     * names a value this marking does not carry is refused rather than shown with a gap.
+     *
+     * @throws InvalidArgumentException when the words are missing, or name a value the marking does not carry
      */
-    public function label(Marking $marking, ?string $locale = null): ?string
+    public function label(Marking $marking, ?string $locale = null, ?string $form = null): ?string
     {
         $type = $marking->sourceType->value;
 
@@ -49,14 +58,30 @@ final readonly class Notice
             return null;
         }
 
-        $key = 'ai-content-marking::messages.notice.'.$type;
-        $label = $this->translator->get($key, [], $locale);
+        $path = $form === null ? 'notice.'.$type : 'notice.forms.'.$form.'.'.$type;
+        $key = 'ai-content-marking::messages.'.$path;
+        $line = $this->translator->get($key, [], $locale);
 
-        if (! is_string($label) || $label === $key) {
-            throw new InvalidArgumentException("The notice for `{$type}` has no words. Publish the translations with `php artisan vendor:publish --tag=ai-content-marking-lang` and add them under `notice.{$type}`.");
+        if (! is_string($line) || $line === $key) {
+            throw new InvalidArgumentException(sprintf(
+                'The notice for `%s` has no words%s. Publish the translations with `php artisan vendor:publish --tag=ai-content-marking-lang` and add them under `%s`.',
+                $type,
+                $form === null ? '' : " in the form `{$form}`",
+                $path,
+            ));
         }
 
-        return $label;
+        $values = ['generator' => $marking->generator, 'model' => $marking->model, 'operator' => $marking->operator];
+
+        foreach ($values as $name => $value) {
+            if ($value === null && preg_match('/:'.$name.'\b/i', $line) === 1) {
+                throw new InvalidArgumentException("The notice under `{$path}` names `:{$name}`, and the marking carries no {$name}.");
+            }
+        }
+
+        $label = $this->translator->get($key, array_filter($values, is_string(...)), $locale);
+
+        return is_string($label) ? $label : $line;
     }
 
     /**

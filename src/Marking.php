@@ -18,38 +18,50 @@ use Pushery\AiContentMarking\Support\Microdata;
 
 /**
  * What a piece of content declares about its origin: the IPTC term, and, where the caller knows
- * them, the system that generated it and the moment it did.
+ * them, the system that generated it, the model behind that system, the operator who runs it and
+ * the moment it generated the content. Each of these is a field of its own, so a reader never has
+ * to take a string apart to find the model.
  *
  * A marking is a value. It carries no wording for readers and decides nothing about where it is
  * shown: `MarkedText` delivers it with a text, and the notice component turns it into a label.
  *
- * @implements Arrayable<string, string|null>
+ * @implements Arrayable<string, int|string|null>
  */
 final readonly class Marking implements Arrayable, Castable, JsonSerializable
 {
+    /**
+     * The version of the shape `toArray()` writes. It rises when a field changes its meaning or
+     * leaves the shape, and stays when a field is added, so a reader can tell a shape it does not
+     * know from a value that is merely missing. A shape without the key is the one before it.
+     */
+    public const int VERSION = 1;
+
     public function __construct(
         public DigitalSourceType $sourceType,
         public ?string $generator = null,
         public ?DateTimeImmutable $generatedAt = null,
+        public ?string $model = null,
+        public ?string $operator = null,
     ) {}
 
     /** Content that generative AI created. */
-    public static function generated(?string $generator = null, ?DateTimeInterface $at = null): self
+    public static function generated(?string $generator = null, ?DateTimeInterface $at = null, ?string $model = null, ?string $operator = null): self
     {
-        return new self(DigitalSourceType::TrainedAlgorithmicMedia, $generator, self::immutable($at));
+        return new self(DigitalSourceType::TrainedAlgorithmicMedia, $generator, self::immutable($at), $model, $operator);
     }
 
     /** Content that a person or a program wrote and generative AI then edited. */
-    public static function edited(?string $generator = null, ?DateTimeInterface $at = null): self
+    public static function edited(?string $generator = null, ?DateTimeInterface $at = null, ?string $model = null, ?string $operator = null): self
     {
-        return new self(DigitalSourceType::CompositeWithTrainedAlgorithmicMedia, $generator, self::immutable($at));
+        return new self(DigitalSourceType::CompositeWithTrainedAlgorithmicMedia, $generator, self::immutable($at), $model, $operator);
     }
 
     /**
      * Read a marking back from the shape `toArray()` writes.
      *
      * The URI is not read: it follows from the term, and a stored URI that disagreed with its term
-     * would be a second answer to the same question.
+     * would be a second answer to the same question. Neither is the version: a shape written before
+     * it existed carries no model and no operator, and reads with both as null.
      *
      * @param  array<array-key, mixed>  $data
      *
@@ -64,11 +76,9 @@ final readonly class Marking implements Arrayable, Castable, JsonSerializable
             throw new InvalidArgumentException('A marking needs `digital_source_type` set to a term of the IPTC Digital Source Type vocabulary, such as `trainedAlgorithmicMedia`.');
         }
 
-        $generator = $data['generator'] ?? null;
-
-        if ($generator !== null && ! is_string($generator)) {
-            throw new InvalidArgumentException('The `generator` of a marking is a string or null.');
-        }
+        $generator = self::optionalString($data, 'generator');
+        $model = self::optionalString($data, 'model');
+        $operator = self::optionalString($data, 'operator');
 
         $generatedAt = $data['generated_at'] ?? null;
 
@@ -76,7 +86,7 @@ final readonly class Marking implements Arrayable, Castable, JsonSerializable
             throw new InvalidArgumentException('The `generated_at` of a marking is an ISO 8601 date-time string or null.');
         }
 
-        return new self($sourceType, $generator, $generatedAt === null ? null : self::moment($generatedAt));
+        return new self($sourceType, $generator, $generatedAt === null ? null : self::moment($generatedAt), $model, $operator);
     }
 
     /**
@@ -103,29 +113,48 @@ final readonly class Marking implements Arrayable, Castable, JsonSerializable
     }
 
     /**
-     * The marking as plain values: the IPTC term, its URI, the generator and the moment, the last
-     * written as an ISO 8601 date-time.
+     * The marking as plain values: the version of this shape, the IPTC term, its URI, the generator,
+     * the model, the operator and the moment, the last written as an ISO 8601 date-time.
      *
-     * @return array{digital_source_type: string, digital_source_type_uri: string, generator: string|null, generated_at: string|null}
+     * @return array{version: int, digital_source_type: string, digital_source_type_uri: string, generator: string|null, model: string|null, operator: string|null, generated_at: string|null}
      */
     #[Override]
     public function toArray(): array
     {
         return [
+            'version' => self::VERSION,
             'digital_source_type' => $this->sourceType->value,
             'digital_source_type_uri' => $this->sourceType->iptcUri(),
             'generator' => $this->generator,
+            'model' => $this->model,
+            'operator' => $this->operator,
             'generated_at' => $this->generatedAt?->format(DateTimeInterface::ATOM),
         ];
     }
 
     /**
-     * @return array{digital_source_type: string, digital_source_type_uri: string, generator: string|null, generated_at: string|null}
+     * @return array{version: int, digital_source_type: string, digital_source_type_uri: string, generator: string|null, model: string|null, operator: string|null, generated_at: string|null}
      */
     #[Override]
     public function jsonSerialize(): array
     {
         return $this->toArray();
+    }
+
+    /**
+     * @param  array<array-key, mixed>  $data
+     *
+     * @throws InvalidArgumentException when the value is neither a string nor null
+     */
+    private static function optionalString(array $data, string $key): ?string
+    {
+        $value = $data[$key] ?? null;
+
+        if ($value !== null && ! is_string($value)) {
+            throw new InvalidArgumentException("The `{$key}` of a marking is a string or null.");
+        }
+
+        return $value;
     }
 
     private static function immutable(?DateTimeInterface $moment): ?DateTimeImmutable

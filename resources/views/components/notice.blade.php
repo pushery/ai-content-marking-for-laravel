@@ -1,9 +1,9 @@
-@props(['marking', 'as' => null])
+@props(['marking', 'as' => null, 'form' => null])
 @php
     // The words a reader sees for a marking, in the element the page chooses. Nothing renders
     // where the configuration shows no notice for the marking's source type. The service
     // provider's view composer hands in $aiContentMarkingNotice.
-    $label = $aiContentMarkingNotice->label($marking);
+    $label = $aiContentMarkingNotice->label($marking, null, $form);
     $element = $label === null ? null : $aiContentMarkingNotice->element($as);
 @endphp
 @if ($element !== null)

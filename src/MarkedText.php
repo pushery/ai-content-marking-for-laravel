@@ -42,15 +42,15 @@ final readonly class MarkedText implements Arrayable, JsonSerializable, Stringab
     }
 
     /** A text that generative AI created. */
-    public static function generated(string $text, ?string $generator = null, ?DateTimeInterface $at = null): self
+    public static function generated(string $text, ?string $generator = null, ?DateTimeInterface $at = null, ?string $model = null, ?string $operator = null): self
     {
-        return new self($text, Marking::generated($generator, $at));
+        return new self($text, Marking::generated($generator, $at, $model, $operator));
     }
 
     /** A text that generative AI edited. */
-    public static function edited(string $text, ?string $generator = null, ?DateTimeInterface $at = null): self
+    public static function edited(string $text, ?string $generator = null, ?DateTimeInterface $at = null, ?string $model = null, ?string $operator = null): self
     {
-        return new self($text, Marking::edited($generator, $at));
+        return new self($text, Marking::edited($generator, $at, $model, $operator));
     }
 
     /**
@@ -71,7 +71,7 @@ final readonly class MarkedText implements Arrayable, JsonSerializable, Stringab
     /**
      * The text and the marking's values.
      *
-     * @return array{text: string, marking: array{digital_source_type: string, digital_source_type_uri: string, generator: string|null, generated_at: string|null}}
+     * @return array{text: string, marking: array{version: int, digital_source_type: string, digital_source_type_uri: string, generator: string|null, model: string|null, operator: string|null, generated_at: string|null}}
      */
     #[Override]
     public function toArray(): array
@@ -83,7 +83,7 @@ final readonly class MarkedText implements Arrayable, JsonSerializable, Stringab
     }
 
     /**
-     * @return array{text: string, marking: array{digital_source_type: string, digital_source_type_uri: string, generator: string|null, generated_at: string|null}}
+     * @return array{text: string, marking: array{version: int, digital_source_type: string, digital_source_type_uri: string, generator: string|null, model: string|null, operator: string|null, generated_at: string|null}}
      */
     #[Override]
     public function jsonSerialize(): array

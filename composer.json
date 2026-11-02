@@ -3,13 +3,26 @@
   "name": "pushery/ai-content-marking-for-laravel",
   "description": "Marks content made with generative AI in Laravel: machine-readable markers in the text your app delivers and in the images it stores, kept through every media library conversion, and a separate notice for readers that you place yourself.",
   "keywords": [
-    "laravel",
-    "php",
     "ai",
-    "ai-act",
-    "ai-generated",
-    "content-marking",
-    "transparency"
+    "ai-disclosure",
+    "ai-generated-content",
+    "ai-transparency",
+    "compliance",
+    "content-labeling",
+    "content-marker",
+    "eu-ai-act",
+    "eu-ai-act-compliance",
+    "generative-ai",
+    "image-metadata",
+    "imagick",
+    "iptc",
+    "laravel",
+    "laravel-framework",
+    "laravel-medialibrary",
+    "laravel-package",
+    "schema-org",
+    "transparency",
+    "xmp"
   ],
   "license": "MIT",
   "authors": [
@@ -42,7 +55,7 @@
     "laravel/mcp": "^1.0",
     "laravel/pao": "^1.1",
     "laravel/pint": "^1.0",
-    "orchestra/testbench": "^11.0",
+    "orchestra/testbench": "^11.2",
     "pestphp/pest": "^5.2.1",
     "pestphp/pest-plugin-agent": "^5.0",
     "pestphp/pest-plugin-browser": "^5.2",
@@ -55,6 +68,11 @@
     "rector/rector": "^2.7.0",
     "spaze/phpstan-disallowed-calls": "^4.12",
     "symfony/yaml": "^7.4.17 || ^8.1.5"
+  },
+  "suggest": {
+    "ext-dom": "Lets DocumentMarker read and write the custom properties of a Word document.",
+    "ext-libxml": "Lets DocumentMarker parse the parts of a Word document.",
+    "ext-zip": "Lets DocumentMarker open a Word document, which is a zip archive."
   },
   "autoload": {
     "psr-4": {

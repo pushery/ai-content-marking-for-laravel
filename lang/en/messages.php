@@ -7,6 +7,11 @@ return [
         'trainedAlgorithmicMedia' => 'Created using Generative AI',
         'compositeWithTrainedAlgorithmicMedia' => 'Edited using Generative AI',
     ],
+    'label' => [
+        'acronym' => 'AI',
+        'trainedAlgorithmicMedia' => 'generated',
+        'compositeWithTrainedAlgorithmicMedia' => 'modified',
+    ],
     'report' => [
         'threshold' => 'A watermark is expected in text of :tokens tokens or more.',
         'model' => 'Model',

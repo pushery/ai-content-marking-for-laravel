@@ -70,9 +70,9 @@ final class AiContentMarkingServiceProvider extends ServiceProvider
         $this->loadViewsFrom(__DIR__.'/../resources/views', 'ai-content-marking');
         $this->loadTranslationsFrom(__DIR__.'/../lang', 'ai-content-marking');
 
-        // A template has no container to ask, so the notice component gets its Notice from a composer.
+        // A template has no container to ask, so the notice and the label get their Notice from a composer.
         $this->callAfterResolving('view', function (Factory $views): void {
-            $views->composer('ai-content-marking::components.notice', function (View $view): void {
+            $views->composer(['ai-content-marking::components.notice', 'ai-content-marking::components.label'], function (View $view): void {
                 $view->with('aiContentMarkingNotice', $this->app->make(Notice::class));
             });
         });

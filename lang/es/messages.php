@@ -7,6 +7,11 @@ return [
         'trainedAlgorithmicMedia' => 'Creado con IA generativa',
         'compositeWithTrainedAlgorithmicMedia' => 'Editado con IA generativa',
     ],
+    'label' => [
+        'acronym' => 'AI',
+        'trainedAlgorithmicMedia' => 'generado',
+        'compositeWithTrainedAlgorithmicMedia' => 'modificado',
+    ],
     'report' => [
         'threshold' => 'Se espera una marca de agua en textos de :tokens tokens o más.',
         'model' => 'Modelo',

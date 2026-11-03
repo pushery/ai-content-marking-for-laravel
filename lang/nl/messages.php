@@ -7,6 +7,11 @@ return [
         'trainedAlgorithmicMedia' => 'Gemaakt met generatieve AI',
         'compositeWithTrainedAlgorithmicMedia' => 'Bewerkt met generatieve AI',
     ],
+    'label' => [
+        'acronym' => 'AI',
+        'trainedAlgorithmicMedia' => 'gegenereerd',
+        'compositeWithTrainedAlgorithmicMedia' => 'gewijzigd',
+    ],
     'report' => [
         'threshold' => 'Een watermerk wordt verwacht in tekst vanaf :tokens tokens.',
         'model' => 'Model',

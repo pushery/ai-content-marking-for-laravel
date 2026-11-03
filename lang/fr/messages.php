@@ -7,6 +7,11 @@ return [
         'trainedAlgorithmicMedia' => 'Créé avec l\'IA générative',
         'compositeWithTrainedAlgorithmicMedia' => 'Modifié avec l\'IA générative',
     ],
+    'label' => [
+        'acronym' => 'AI',
+        'trainedAlgorithmicMedia' => 'généré',
+        'compositeWithTrainedAlgorithmicMedia' => 'modifié',
+    ],
     'report' => [
         'threshold' => 'Un filigrane est attendu dans les textes de :tokens tokens ou plus.',
         'model' => 'Modèle',

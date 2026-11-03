@@ -39,6 +39,9 @@ final readonly class ImageMarker
     /** How much of a file the reader reads: 1 MiB. */
     public const int HEAD_BYTES = 1_048_576;
 
+    /** The most chunk headers the walk past the first megabyte of a WebP reads, far more than a real one lists. */
+    public const int WEBP_CHUNKS = 65_536;
+
     private const string IPTC_EXTENSION = 'http://iptc.org/std/Iptc4xmpExt/2008-02-29/';
 
     private const string XMP_BASIC = 'http://ns.adobe.com/xap/1.0/';
@@ -134,7 +137,9 @@ final readonly class ImageMarker
 
     /**
      * The XMP and C2PA chunks a WebP lists past the first megabyte, found by walking the chunk
-     * headers, so the cost follows the number of chunks and not the size of the image.
+     * headers, so the cost follows the number of chunks and not the size of the image. The walk reads
+     * WEBP_CHUNKS headers at most and keeps about a megabyte of what the chunks hold, so a file made
+     * of empty or repeated chunks costs no more than a real one.
      */
     private function trailingWebpMetadata(SplFileObject $file, string $head): string
     {
@@ -144,8 +149,9 @@ final readonly class ImageMarker
 
         $metadata = '';
         $offset = 12;
+        $walked = 0;
 
-        while (strlen($header = $this->bytes($file, $offset, 8)) === 8) {
+        while ($walked++ < self::WEBP_CHUNKS && strlen($metadata) < self::HEAD_BYTES && strlen($header = $this->bytes($file, $offset, 8)) === 8) {
             $size = $this->uint32le(substr($header, 4, 4));
 
             if ($offset >= self::HEAD_BYTES && in_array(substr($header, 0, 4), ['XMP ', 'C2PA'], true)) {

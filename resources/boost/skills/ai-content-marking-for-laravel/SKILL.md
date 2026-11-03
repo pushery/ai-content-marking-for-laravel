@@ -63,6 +63,12 @@ migrations and no routes.
 6. For an image, write the marking with `Pushery\AiContentMarking\Images\ImageMarker`; the
    conversions of `spatie/laravel-medialibrary` keep it. For a Word document, write it with
    `Pushery\AiContentMarking\Documents\DocumentMarker`, which puts it in the custom properties.
+   Where the image is a deep fake, also place `<x-ai-content-marking::label :marking="$marking" />`
+   on it, in a corner your stylesheet positions it in, everywhere the image is shown, the
+   listing tile included. `beside="none"` renders the acronym alone. Where the image goes into a
+   mail or a download, draw the label into it with
+   `app(Pushery\AiContentMarking\Images\ImageLabeler::class)->stamp($path, $marking)`, which writes
+   the marking into the result again.
 7. For a mail, return `new Headers(text: MailMarking::headers($marking))` from the mailable's
    `headers()`, or add the field in `withSymfonyMessage()`. `MailMarkingReader` reads it back and
    names the DKIM signatures that list it.

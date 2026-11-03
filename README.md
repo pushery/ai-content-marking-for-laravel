@@ -100,6 +100,12 @@ The reader also recognizes the XMP other tools write and an embedded C2PA manife
 the media library derives from a marked original carries the original's marking, and
 `Pushery\AiContentMarking\Testing\MarkingPipeline` checks in your own suite that your image
 pipeline keeps it: [marking images](https://docs.pushery.com/ai-content-marking-for-laravel/images).
+Where an image is a deep fake in the sense of the AI Act, the people who see it need a visible
+label too. `<x-ai-content-marking::label :marking="$marking" />` renders the one the European
+Commission's Code of Practice describes, the acronym "AI" as its main element and beside it
+whether the image was generated or modified. Where the image travels on its own, in a mail or as a
+download, `Pushery\AiContentMarking\Images\ImageLabeler` draws the acronym into the image itself:
+[labeling images](https://docs.pushery.com/ai-content-marking-for-laravel/labeling-images).
 
 A mail carries its marking in a header field, where a DKIM signature can cover it:
 
@@ -114,6 +120,10 @@ public function headers(): Headers
 ```
 
 `MailMarkingReader` reads the field back from a raw mail and names the DKIM signatures that list it.
+A Word document carries its marking in its custom properties, written and read by `DocumentMarker`,
+which refuses a part that unpacks to more than a megabyte or declares a document type, so an
+uploaded document cannot take the memory of the request reading it:
+[marking documents](https://docs.pushery.com/ai-content-marking-for-laravel/documents).
 The model register records whether each model you use watermarks its text, and `GapReporter` holds
 every output against the layers of marking the European Commission's Code of Practice asks of text:
 [marking mail](https://docs.pushery.com/ai-content-marking-for-laravel/mail) and

@@ -42,6 +42,9 @@ final readonly class DocumentMarker
     /** The part that holds the custom properties. */
     public const string PROPERTIES = 'docProps/custom.xml';
 
+    /** The most a part the marker reads may unpack to: custom properties, relationships and content types take kilobytes. */
+    public const int LARGEST_PART = 1_048_576;
+
     public const string TYPE = 'DigitalSourceType';
 
     public const string GENERATOR = 'DigitalSourceGenerator';
@@ -197,13 +200,25 @@ final readonly class DocumentMarker
         return $zip;
     }
 
-    /** @throws InvalidArgumentException when the part is no well-formed XML */
+    /** @throws InvalidArgumentException when the part unpacks to more than LARGEST_PART, declares a document type, or is no well-formed XML */
     private function part(ZipArchive $zip, string $name): ?DOMDocument
     {
-        $xml = $zip->getFromName($name);
+        // Read one byte past the limit and no further, whatever size the archive claims for the part: an archive
+        // built to unpack to gigabytes stops here instead of in the memory of the request.
+        $xml = $zip->getFromName($name, self::LARGEST_PART + 1);
 
         if ($xml === false) {
             return null;
+        }
+
+        if (strlen($xml) > self::LARGEST_PART) {
+            throw new InvalidArgumentException("The part {$name} of the document unpacks to more than ".self::LARGEST_PART.' bytes.');
+        }
+
+        // No part of an Office Open XML document declares a document type, and a declaration is where an entity that
+        // expands to gigabytes would be defined, so one is refused before anything parses it.
+        if (stripos($xml, '<!DOCTYPE') !== false) {
+            throw new InvalidArgumentException("The part {$name} of the document declares a document type, which no part of an Office Open XML document carries.");
         }
 
         $document = new DOMDocument;

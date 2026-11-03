@@ -7,6 +7,11 @@ return [
         'trainedAlgorithmicMedia' => 'Mit generativer KI erstellt',
         'compositeWithTrainedAlgorithmicMedia' => 'Mit generativer KI bearbeitet',
     ],
+    'label' => [
+        'acronym' => 'AI',
+        'trainedAlgorithmicMedia' => 'generiert',
+        'compositeWithTrainedAlgorithmicMedia' => 'verändert',
+    ],
     'report' => [
         'threshold' => 'Ein Wasserzeichen wird in Text ab :tokens Token erwartet.',
         'model' => 'Modell',

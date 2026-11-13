@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 return [
     'notice' => [
-        'trainedAlgorithmicMedia' => 'Created using Generative AI',
-        'compositeWithTrainedAlgorithmicMedia' => 'Edited using Generative AI',
+        'trainedAlgorithmicMedia' => 'Created using generative AI',
+        'compositeWithTrainedAlgorithmicMedia' => 'Edited using generative AI',
     ],
     'label' => [
         'acronym' => 'AI',
@@ -36,7 +36,7 @@ return [
         ],
         'gaps' => [
             'watermark-missing' => 'no watermark: the model does not watermark text',
-            'watermark-unknown' => 'no known watermark: whether the model watermarks text is not known',
+            'watermark-unknown' => 'watermark unknown: the register does not say whether the model watermarks its text',
             'metadata-missing' => 'no marking in the metadata of its format',
             'metadata-unsigned' => 'marking in metadata without a signature',
         ],

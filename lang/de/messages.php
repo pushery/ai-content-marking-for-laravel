@@ -36,7 +36,7 @@ return [
         ],
         'gaps' => [
             'watermark-missing' => 'kein Wasserzeichen: das Modell versieht Text nicht mit Wasserzeichen',
-            'watermark-unknown' => 'kein bekanntes Wasserzeichen: ob das Modell Text mit Wasserzeichen versieht, ist unbekannt',
+            'watermark-unknown' => 'Wasserzeichen unbekannt: das Register sagt nicht, ob das Modell seinen Text mit Wasserzeichen versieht',
             'metadata-missing' => 'keine Kennzeichnung in den Metadaten des Formats',
             'metadata-unsigned' => 'Kennzeichnung in Metadaten ohne Signatur',
         ],

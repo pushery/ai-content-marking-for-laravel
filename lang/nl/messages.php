@@ -36,7 +36,7 @@ return [
         ],
         'gaps' => [
             'watermark-missing' => 'geen watermerk: het model voorziet tekst niet van een watermerk',
-            'watermark-unknown' => 'geen bekend watermerk: onbekend of het model tekst van een watermerk voorziet',
+            'watermark-unknown' => 'watermerk onbekend: het register zegt niet of het model zijn tekst van een watermerk voorziet',
             'metadata-missing' => 'geen markering in de metadata van het formaat',
             'metadata-unsigned' => 'markering in metadata zonder handtekening',
         ],

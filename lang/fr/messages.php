@@ -36,7 +36,7 @@ return [
         ],
         'gaps' => [
             'watermark-missing' => 'pas de filigrane : le modèle n\'applique pas de filigrane au texte',
-            'watermark-unknown' => 'pas de filigrane connu : on ignore si le modèle applique un filigrane au texte',
+            'watermark-unknown' => 'filigrane inconnu : le registre n’indique pas si le modèle applique un filigrane à son texte',
             'metadata-missing' => 'pas de marquage dans les métadonnées de son format',
             'metadata-unsigned' => 'marquage dans des métadonnées non signées',
         ],

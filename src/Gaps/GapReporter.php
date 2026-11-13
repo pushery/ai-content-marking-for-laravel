@@ -103,7 +103,8 @@ final readonly class GapReporter
 
         $lines[] = '';
         $lines[] = $this->row([$this->word('output', $locale), $this->word('model', $locale), $this->word('tokens', $locale), $this->word('kind', $locale), $this->word('findings', $locale)]);
-        $lines[] = '| --- | --- | --- | --- | --- |';
+        // The token count stands flush right, so its digits line up from row to row.
+        $lines[] = '| --- | --- | ---: | --- | --- |';
 
         foreach ($report->assessments as $assessment) {
             $output = $assessment->output;

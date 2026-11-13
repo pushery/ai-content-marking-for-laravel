@@ -23,8 +23,7 @@ Marks content made with generative AI in Laravel: machine-readable markers in th
 
 **Full documentation at
 [docs.pushery.com/ai-content-marking-for-laravel](https://docs.pushery.com/ai-content-marking-for-laravel/).**
-This README is the quick start; the guides, the configuration reference and the
-upgrade notes live there.
+This README is the quick start; the guides and the configuration reference live there.
 
 ## Requirements
 
@@ -76,7 +75,7 @@ $description = MarkedText::generated($modelOutput, generator: 'Amazon Bedrock');
 <p>{{ $description->html() }}</p>
 ```
 
-The notice renders "Created using Generative AI" in the application's locale, and `html()` writes
+The notice renders "Created using generative AI" in the application's locale, and `html()` writes
 the escaped text inside schema.org microdata that names the IPTC Digital Source Type term
 `trainedAlgorithmicMedia`. In JSON, a `MarkedText` is the text beside the values of its marking,
 and wherever a plain string is expected it is the plain text. `MarkedText::edited()` marks a text a

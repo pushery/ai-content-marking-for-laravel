@@ -36,7 +36,7 @@ return [
         ],
         'gaps' => [
             'watermark-missing' => 'sin marca de agua: el modelo no aplica marcas de agua al texto',
-            'watermark-unknown' => 'sin marca de agua conocida: se desconoce si el modelo aplica marcas de agua al texto',
+            'watermark-unknown' => 'marca de agua desconocida: el registro no indica si el modelo aplica marcas de agua a su texto',
             'metadata-missing' => 'sin marcado en los metadatos de su formato',
             'metadata-unsigned' => 'marcado en metadatos sin firma',
         ],

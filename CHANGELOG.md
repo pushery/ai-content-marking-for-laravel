@@ -4,6 +4,18 @@ All notable changes to `pushery/ai-content-marking-for-laravel` are documented h
 
 A release carries only the sections that have an entry, in this order: `### ⚠️ Breaking`, `### ✨ Added`, `### 🔧 Changed`, `### ⚡ Performance`, `### 🐛 Fixed`, `### 🔒 Security`, `### 🧹 Deprecated`, `### 🗑️ Removed` and `### 📚 Documentation`.
 
+## [0.4.0] - 2026-11-13
+
+### ✨ Added
+
+- **A label can explain its acronym.** `explain` on `<x-ai-content-marking::label>` makes the acronym a button that opens the sentence of the notice in a popover, for a reader who does not know what "AI" stands for. A click, a touch and the keyboard open it without JavaScript, and a browser without popovers shows the sentence beside the acronym. The popover is named after the label's `id` where it has one. An explained label is a button and no image, so it carries no `role="img"`; the button reads the sentence as its name. `form` on the label takes the sentence of a form, as it does on the notice. The notice and the image pages show the acronym alone beside a heading and the explanation, with their CSS.
+
+### 🔧 Changed
+
+- **The English notice writes "generative AI" in lower case.** "Created using Generative AI" and "Edited using Generative AI" capitalized it, unlike every other language of the package and the sentences around a notice. They read "Created using generative AI" and "Edited using generative AI" now. An application that matches the English words, in a test or a stylesheet, updates them.
+- **The gap report says what is unknown about a watermark once.** The finding read "no known watermark: whether the model watermarks text is not known" and its counterparts in every language. It reads "watermark unknown: the register does not say whether the model watermarks its text" now, in each language.
+- **The gap report sets its token counts flush right.** `GapReporter::markdown()` marks the column `Tokens` as right-aligned, `---:`, so the digits of the counts line up from row to row wherever the report is rendered. The other columns stay as they were.
+
 ## [0.3.0] - 2026-11-03
 
 ### ✨ Added
@@ -56,7 +68,8 @@ A release carries only the sections that have an entry, in this order: `### ⚠�
 
 Initial release. The package marks content made with generative AI in a Laravel application with the IPTC Digital Source Type: text as schema.org microdata, images as XMP that every media library conversion keeps, and mail as a header field a DKIM signature can cover. A Blade component shows readers a notice in seven languages, every marking can be read back, a test helper checks an application's image pipeline, and a report names each output that lacks the two layers of marking the European Commission's Code of Practice asks of text.
 
-[Unreleased]: https://github.com/pushery/ai-content-marking-for-laravel/compare/v0.3.0...HEAD
+[Unreleased]: https://github.com/pushery/ai-content-marking-for-laravel/compare/v0.4.0...HEAD
+[0.4.0]: https://github.com/pushery/ai-content-marking-for-laravel/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/pushery/ai-content-marking-for-laravel/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/pushery/ai-content-marking-for-laravel/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/pushery/ai-content-marking-for-laravel/releases/tag/v0.1.0

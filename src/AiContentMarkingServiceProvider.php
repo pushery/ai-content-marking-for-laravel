@@ -15,21 +15,37 @@ use Illuminate\Contracts\View\View;
 use Illuminate\Support\ServiceProvider;
 use Override;
 use Pushery\AiContentMarking\Gaps\GapReporter;
+use Pushery\AiContentMarking\Images\ImageDecoder;
 use Pushery\AiContentMarking\MediaLibrary\KeepMarkingOnConversions;
+use Pushery\AiContentMarking\MediaLibrary\OriginalMarking;
 use Pushery\AiContentMarking\Models\ModelRegister;
 use Pushery\AiContentMarking\Support\LanguageFallbackLoader;
 use Spatie\MediaLibrary\Conversions\Events\ConversionHasBeenCompletedEvent;
+use Spatie\MediaLibrary\Conversions\Events\ConversionWillStartEvent;
+use Spatie\MediaLibrary\ResponsiveImages\Events\ResponsiveImagesGeneratedEvent;
 
 /**
- * Ships the configuration, the notice component and its translations, binds the reader, the model
- * register and the gap reporter, and keeps the marking of an original on every conversion the media
- * library derives from it.
+ * Ships the configuration, the notice component and its translations, binds the reader, the image
+ * decoder, the model register and the gap reporter, and keeps the marking of an original on every
+ * conversion and every responsive image the media library derives from it.
  *
  * The package adds no table and no route: a marking travels with the text or the image it
  * describes, through the host's own views, resources and media.
  */
 final class AiContentMarkingServiceProvider extends ServiceProvider
 {
+    /**
+     * The sections of the config that are catalogs, as dotted paths from the config key: maps whose
+     * keys the host chooses, one entry per plan, per document or per signing key. A key that a
+     * published catalog leaves out was removed by the host rather than added by a later release, so
+     * the merge takes a published catalog as it stands. A catalog the host never published arrives
+     * whole from the default. A package lists such a section here, for example
+     * 'ai-content-marking.plans'.
+     *
+     * @var list<string>
+     */
+    private const array CATALOG_SECTIONS = [];
+
     #[Override]
     public function register(): void
     {
@@ -46,6 +62,18 @@ final class AiContentMarkingServiceProvider extends ServiceProvider
 
             return new MarkingReader(is_int($configured) && $configured >= 1 ? $configured : MarkingReader::DEFAULT_MAX_BYTES);
         });
+
+        // The marker and the labeler the container makes get this decoder, and with it the configured ceiling.
+        $this->app->singleton(ImageDecoder::class, static function (Container $app): ImageDecoder {
+            // Read with the fallback the shipped file has, for the same reason as the reader's ceiling.
+            $configured = $app->make(Repository::class)->get('ai-content-marking.images.max_pixels');
+
+            return new ImageDecoder(is_int($configured) && $configured >= 1 ? $configured : ImageDecoder::DEFAULT_MAX_PIXELS);
+        });
+
+        // One for the application, so the listener made for each event of the media library reads the marking of
+        // an original once for all its conversions.
+        $this->app->singleton(OriginalMarking::class);
 
         $this->app->singleton(ModelRegister::class, static function (Container $app): ModelRegister {
             $models = $app->make(Repository::class)->get('ai-content-marking.models');
@@ -77,7 +105,7 @@ final class AiContentMarkingServiceProvider extends ServiceProvider
             });
         });
 
-        $this->app->make(Dispatcher::class)->listen(ConversionHasBeenCompletedEvent::class, KeepMarkingOnConversions::class);
+        $this->app->make(Dispatcher::class)->listen([ConversionWillStartEvent::class, ConversionHasBeenCompletedEvent::class, ResponsiveImagesGeneratedEvent::class], KeepMarkingOnConversions::class);
 
         if ($this->app->runningInConsole()) {
             $this->registerPublishing();
@@ -107,10 +135,14 @@ final class AiContentMarkingServiceProvider extends ServiceProvider
      * `array_is_list([])` is true, which is the behavior wanted here: an empty array is a host
      * saying "none", and descending into it could only re-introduce what it emptied.
      *
-     * A host with a cached config is never merged at all, by the framework's design. For those
-     * installations the published file is the whole truth, so a package that reads a nested key
-     * needs its read-site fallback to agree with the shipped default. The two are halves of one
-     * guarantee.
+     * Recursion stops at a catalog as well, a section named in CATALOG_SECTIONS. Its keys are the
+     * host's, so a key missing from the published catalog is one the host removed, and laying the
+     * default under it would hand that entry back.
+     *
+     * A host with a cached config is not merged at runtime: the cache already holds the merge
+     * `config:cache` did when it ran. A key a later release adds is missing from it until the host
+     * caches again, so a package that reads a nested key needs its read-site fallback to agree with
+     * the shipped default.
      */
     private function mergeConfigRecursivelyFrom(string $path, string $key): void
     {
@@ -130,15 +162,19 @@ final class AiContentMarkingServiceProvider extends ServiceProvider
         $repository->set($key, $this->mergeConfigSections(
             is_array($shipped) ? $shipped : [],
             is_array($existing) ? $existing : [],
+            $key.'.',
+            self::CATALOG_SECTIONS,
         ));
     }
 
     /**
      * @param  array<array-key, mixed>  $shipped
      * @param  array<array-key, mixed>  $published
+     * @param  string  $path  the dotted path of the two maps, so a catalog is recognized at any depth
+     * @param  list<string>  $catalogs  the dotted paths of the catalogs, which the merge takes as published
      * @return array<array-key, mixed>
      */
-    private function mergeConfigSections(array $shipped, array $published): array
+    private function mergeConfigSections(array $shipped, array $published, string $path = '', array $catalogs = []): array
     {
         foreach ($shipped as $key => $value) {
             if (! array_key_exists($key, $published)) {
@@ -147,12 +183,12 @@ final class AiContentMarkingServiceProvider extends ServiceProvider
                 continue;
             }
 
-            // Recurse only where both sides are maps. If either is a list, or the published
-            // value is a scalar or an explicit null, what the host wrote stands. An explicit
-            // null is a value like any other here, which keeps "write => null to switch this
-            // off" working exactly as a shipped config file describes it.
-            if (is_array($value) && is_array($published[$key]) && ! array_is_list($value) && ! array_is_list($published[$key])) {
-                $published[$key] = $this->mergeConfigSections($value, $published[$key]);
+            // Recurse only where both sides are maps and the section is no catalog. If either is a
+            // list, or the published value is a scalar or an explicit null, what the host wrote
+            // stands. An explicit null is a value like any other here, which keeps "write => null
+            // to switch this off" working exactly as a shipped config file describes it.
+            if (is_array($value) && is_array($published[$key]) && ! array_is_list($value) && ! array_is_list($published[$key]) && ! in_array($path.$key, $catalogs, true)) {
+                $published[$key] = $this->mergeConfigSections($value, $published[$key], $path.$key.'.', $catalogs);
             }
         }
 

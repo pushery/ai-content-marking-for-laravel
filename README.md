@@ -1,6 +1,6 @@
 <p align="center">
   <a href="https://github.com/pushery/ai-content-marking-for-laravel">
-    <img src="art/header.png" alt="AI Content Marking for Laravel" width="100%">
+    <img src="https://raw.githubusercontent.com/pushery/ai-content-marking-for-laravel/main/art/header.png" alt="AI Content Marking for Laravel" width="100%">
   </a>
 </p>
 
@@ -11,11 +11,11 @@
 [![Laravel Versions](https://badge.laravel.cloud/badge/pushery/ai-content-marking-for-laravel?style=flat)](https://packagist.org/packages/pushery/ai-content-marking-for-laravel)
 [![License](https://img.shields.io/packagist/l/pushery/ai-content-marking-for-laravel.svg)](LICENSE)
 
-[![Tests](https://img.shields.io/badge/tests-Pest%205-8BC34A.svg)](https://pestphp.com)
-![Coverage](https://img.shields.io/badge/coverage-100%25-brightgreen.svg)
-![Type Coverage](https://img.shields.io/badge/types-100%25-brightgreen.svg)
-[![PHPStan](https://img.shields.io/badge/PHPStan-max-blue.svg)](https://phpstan.org)
-[![Code Style](https://img.shields.io/badge/code%20style-pint-orange.svg)](https://laravel.com/docs/pint)
+[![Tests: Pest 5](https://img.shields.io/badge/tests-Pest%205-8BC34A.svg)](https://pestphp.com)
+![Coverage: 100%](https://img.shields.io/badge/coverage-100%25-brightgreen.svg)
+![Type coverage: 100%](https://img.shields.io/badge/types-100%25-brightgreen.svg)
+[![PHPStan: level 10](https://img.shields.io/badge/PHPStan-10-blue.svg)](https://phpstan.org)
+[![Code style: Pint](https://img.shields.io/badge/code%20style-pint-orange.svg)](https://laravel.com/docs/pint)
 
 Marks content made with generative AI in Laravel: machine-readable markers in the text your app delivers and in the images it stores, kept through every media library conversion, and a separate notice for readers that you place yourself.
 
@@ -33,11 +33,11 @@ This README is the quick start; the guides and the configuration reference live 
 - `spatie/laravel-medialibrary` 11, which the package extends
 
 Tested on PostgreSQL and MySQL 8.4, the databases Laravel Cloud runs (serverless Postgres
-and MySQL 8.4 LTS), so it runs there out of the box. The fast suite runs on SQLite.
+and MySQL 8.4 LTS). The fast suite runs on SQLite.
 
-Tested on **PHP 8.4** — the floor of the declared range, because a `>=` promise is
-only proven by running on the boundary — and on **PHP 8.5**, so the upper half of
-`^8.4` is exercised here rather than first by a consumer.
+Tested on the floor of the declared PHP range, because a `>=` promise is only proven
+by running on the boundary, and on the minor version above it, so the range above the
+floor is exercised here rather than first by a consumer.
 
 ## Installation
 
@@ -67,6 +67,8 @@ needs:
 ```php
 use Pushery\AiContentMarking\MarkedText;
 
+$modelOutput = 'A solid oak table that seats six.'; // the text a model wrote
+
 $description = MarkedText::generated($modelOutput, generator: 'Amazon Bedrock');
 ```
 
@@ -89,6 +91,8 @@ An image carries its marking as XMP:
 ```php
 use Pushery\AiContentMarking\Images\ImageMarker;
 use Pushery\AiContentMarking\Marking;
+
+$path = storage_path('app/images/table.jpg'); // an image a model made
 
 new ImageMarker()->write($path, Marking::generated('Example Image Model'));
 
@@ -137,7 +141,7 @@ and does not do.
 
 The test suite is not part of the published package: the tests and their PHPUnit
 configuration stay in the development repository, so a clone of this repository has no
-`composer test`. [CONTRIBUTING.md](CONTRIBUTING.md) says how a change is tested on its way in.
+`composer test`. [CONTRIBUTING.md](https://github.com/pushery/ai-content-marking-for-laravel/blob/main/CONTRIBUTING.md) says how a change is tested on its way in.
 
 ## Security
 

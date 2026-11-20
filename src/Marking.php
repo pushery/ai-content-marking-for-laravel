@@ -36,13 +36,31 @@ final readonly class Marking implements Arrayable, Castable, JsonSerializable
      */
     public const int VERSION = 1;
 
+    /** The system that generated the content, where the caller names one. */
+    public ?string $generator;
+
+    /** The model behind that system, where the caller names one. */
+    public ?string $model;
+
+    /** The operator who runs the system, where the caller names one. */
+    public ?string $operator;
+
+    /**
+     * The generator, the model and the operator are kept without the white space around them, and
+     * one that holds nothing else is none. The readers of an image and of a document read them back
+     * that way, so a value written into a file reads back as the marking holds it.
+     */
     public function __construct(
         public DigitalSourceType $sourceType,
-        public ?string $generator = null,
+        ?string $generator = null,
         public ?DateTimeImmutable $generatedAt = null,
-        public ?string $model = null,
-        public ?string $operator = null,
-    ) {}
+        ?string $model = null,
+        ?string $operator = null,
+    ) {
+        $this->generator = $this->named($generator);
+        $this->model = $this->named($model);
+        $this->operator = $this->named($operator);
+    }
 
     /** Content that generative AI created. */
     public static function generated(?string $generator = null, ?DateTimeInterface $at = null, ?string $model = null, ?string $operator = null): self
@@ -155,6 +173,14 @@ final readonly class Marking implements Arrayable, Castable, JsonSerializable
         }
 
         return $value;
+    }
+
+    /** A value without the white space around it, and null for one that holds nothing else. */
+    private function named(?string $value): ?string
+    {
+        $trimmed = trim($value ?? '');
+
+        return $trimmed === '' ? null : $trimmed;
     }
 
     private static function immutable(?DateTimeInterface $moment): ?DateTimeImmutable

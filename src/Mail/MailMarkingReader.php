@@ -101,6 +101,8 @@ final readonly class MailMarkingReader
         $fields = [];
 
         foreach (preg_split('/\r?\n/', $unfolded) ?: [] as $line) {
+            // A line holds no line feed, since the section was split at each one, so the `$` below
+            // ends the value at the end of the line.
             if (preg_match('/^([\x21-\x39\x3B-\x7E]+):(.*)$/s', $line, $field) === 1) {
                 $fields[] = [strtolower($field[1]), trim($field[2])];
             }
@@ -182,6 +184,7 @@ final readonly class MailMarkingReader
             $attribute = strtolower(trim($pair[0]));
             $raw = $this->unquote(trim($pair[1]));
 
+            // The name is trimmed above, so no line feed follows it for the `$` below to stop before.
             if (preg_match('/^([^*]+)\*(\d+)(\*?)$/', $attribute, $section) === 1) {
                 $sections[$section[1]][(int) $section[2]] ??= [$raw, $section[3] === '*'];
             } elseif (str_ends_with($attribute, '*')) {

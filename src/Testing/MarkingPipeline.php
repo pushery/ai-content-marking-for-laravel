@@ -10,6 +10,8 @@ use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Support\Facades\Facade;
 use Imagick;
 use ImagickPixel;
+use InvalidArgumentException;
+use PHPUnit\Framework\Assert;
 use Pushery\AiContentMarking\Images\ImageMarker;
 use Pushery\AiContentMarking\Marking;
 use RuntimeException;
@@ -23,7 +25,8 @@ use UnexpectedValueException;
  * the generator it went in with, and the unmarked one with no marking at all. A reader that finds a
  * marking everywhere and a pipeline that marks every file both look like success from the outside,
  * and the unmarked image is what tells them apart from a pipeline that keeps the marking. A failure
- * names the stage that lost the marking or made one up.
+ * names the stage that lost the marking or made one up, and every check that passes counts as an
+ * assertion of the test, so a test that does nothing but run the pipeline is not reported as risky.
  *
  *     MarkingPipeline::through([
  *         'thumbnail' => fn (string $path): string => $this->thumbnail($path),
@@ -38,9 +41,9 @@ final readonly class MarkingPipeline
     private ImageMarker $marker;
 
     /**
-     * @param  array<string, Closure(string): string>  $stages  by name, each taking the path of an
-     *                                                          image and returning the path of the
-     *                                                          image it made
+     * @param  array<array-key, Closure(string): string>  $stages  by name, or numbered in a list, each taking
+     *                                                             the path of an image and returning the path
+     *                                                             of the image it made
      */
     private function __construct(private array $stages)
     {
@@ -48,9 +51,9 @@ final readonly class MarkingPipeline
     }
 
     /**
-     * @param  array<string, Closure(string): string>  $stages  by name, each taking the path of an
-     *                                                          image and returning the path of the
-     *                                                          image it made
+     * @param  array<array-key, Closure(string): string>  $stages  by name, or numbered in a list, each taking
+     *                                                             the path of an image and returning the path
+     *                                                             of the image it made
      */
     public static function through(array $stages): self
     {
@@ -58,10 +61,12 @@ final readonly class MarkingPipeline
     }
 
     /**
-     * Sends a marked and an unmarked image through every stage, in an image format Imagick writes.
+     * Sends a marked and an unmarked image through every stage, in one of the formats the marker writes
+     * into: `jpeg`, `png`, `webp` or `tiff`.
      *
      * @throws UnexpectedValueException naming the stage that lost the marking, changed it, marked the
      *                                  unmarked image, or made no image
+     * @throws InvalidArgumentException when the format is none of those
      * @throws RuntimeException when ext-imagick is not loaded, or no application is booted
      */
     public function assertKeepsMarking(string $format = 'jpeg'): void
@@ -82,7 +87,9 @@ final readonly class MarkingPipeline
             // reader tells a marked image from an unmarked one before any stage is judged by it.
             $this->check('the images it started from', $marked, $unmarked, $marking);
 
-            foreach ($this->stages as $stage => $run) {
+            foreach ($this->stages as $name => $run) {
+                // A list numbers its stages, and a name made of digits is an int key, the way PHP stores it.
+                $stage = (string) $name;
                 $marked = $this->made($stage, $run($marked));
                 $unmarked = $this->made($stage, $run($unmarked));
 
@@ -122,6 +129,9 @@ final readonly class MarkingPipeline
         return $imagick->getImageBlob();
     }
 
+    /**
+     * @param  mixed  $path  what the stage returned, which a stage of the application may return as anything
+     */
     private function made(string $stage, mixed $path): string
     {
         return is_string($path) && is_file($path) ? $path : throw new UnexpectedValueException("The stage [{$stage}] returned no path of an image it made.");
@@ -148,6 +158,12 @@ final readonly class MarkingPipeline
 
         if ($this->marker->read($unmarked)->isMarked()) {
             throw new UnexpectedValueException("The unmarked image came out of {$where} marked: the pipeline marks images on its own, or the reader finds markings that are not there, and the marked image proves nothing either way.");
+        }
+
+        // A check that passed counts as an assertion of the test that runs it, so a test that only runs the pipeline
+        // is not reported as one that tests nothing. Outside a test run PHPUnit is not there, and nothing is counted.
+        if (class_exists(Assert::class)) {
+            Assert::assertThat(true, Assert::isTrue());
         }
     }
 }

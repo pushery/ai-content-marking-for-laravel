@@ -6,7 +6,6 @@ namespace Pushery\AiContentMarking\Images;
 
 use DateTimeImmutable;
 use Imagick;
-use ImagickException;
 use InvalidArgumentException;
 use Pushery\AiContentMarking\DigitalSourceType;
 use Pushery\AiContentMarking\Marking;
@@ -25,9 +24,15 @@ use UnexpectedValueException;
  *
  * JPEG, PNG and WebP are marked without decoding a pixel: the packet goes into an APP1 segment, an
  * `iTXt` chunk or an `XMP ` chunk near the start of the file, and a packet the image carried
- * before is replaced. Any other format Imagick reads and writes is marked through Imagick, which
- * encodes the image again. Every write is read back, and an image that does not hold the value
- * refuses it.
+ * before is replaced. A TIFF is marked through Imagick, which encodes the image again, once
+ * ImageDecoder has found the bytes to be one and to hold no more pixels than it takes; bytes in any
+ * other format reach no decoder at all. Every write is read back, and an image that does not hold
+ * the value refuses it.
+ *
+ * A marking fits the one APP1 segment a JPEG gives XMP, whatever the format it goes into, so a JPEG
+ * made from any marked image can carry it too. The writer refuses a longer one, and the reader
+ * leaves out a generator that would make the marking longer, so the source type of an image always
+ * passes on to its copies.
  *
  * The reader reads the first megabyte of a file, where the header segments that carry provenance
  * live, and of a WebP also the metadata chunks its container lists after that, so the cost does not
@@ -56,10 +61,13 @@ final readonly class ImageMarker
 
     private const string BYTE_ORDER_MARK = "\xEF\xBB\xBF";
 
+    public function __construct(private ImageDecoder $decoder = new ImageDecoder) {}
+
     /**
      * Writes the marking into the image at the path, in place of the XMP it carried.
      *
-     * @throws InvalidArgumentException when there is no file, or no image the marker can write into
+     * @throws InvalidArgumentException when there is no file, no image the marker can write into, or a
+     *                                  marking longer than a JPEG can carry
      * @throws UnexpectedValueException when the image does not hold the marking once written
      */
     public function write(string $path, Marking $marking): void
@@ -102,12 +110,18 @@ final readonly class ImageMarker
     /**
      * The bytes of an image with the marking written into them, in place of the XMP they carried.
      *
-     * @throws InvalidArgumentException when the bytes are no image the marker can write into
+     * @throws InvalidArgumentException when the bytes are no image the marker can write into, a TIFF of
+     *                                  more pixels than the decoder takes, or the marking is longer than a
+     *                                  JPEG can carry
      * @throws UnexpectedValueException when the image does not hold the marking once written
      */
     public function mark(string $image, Marking $marking): string
     {
         $packet = $this->packet($marking);
+
+        if (! $this->fitsAJpeg($packet)) {
+            throw new InvalidArgumentException('The marking is longer than the one APP1 segment a JPEG gives XMP. Shorten the generator.');
+        }
 
         $marked = match (true) {
             str_starts_with($image, "\xFF\xD8\xFF") => $this->intoJpeg($image, $packet),
@@ -183,11 +197,12 @@ final readonly class ImageMarker
             $sourceType = $term === null ? null : DigitalSourceType::fromUri($term);
 
             if ($sourceType instanceof DigitalSourceType) {
-                return new Marking(
-                    $sourceType,
-                    $this->property($packet, self::XMP_BASIC, 'CreatorTool'),
-                    $this->moment($this->property($packet, self::XMP_BASIC, 'CreateDate')),
-                );
+                $generatedAt = $this->moment($this->property($packet, self::XMP_BASIC, 'CreateDate'));
+                $marking = new Marking($sourceType, $this->property($packet, self::XMP_BASIC, 'CreatorTool'), $generatedAt);
+
+                // A generator too long for a JPEG to carry is left out, so the source type still passes on to every
+                // copy of the image, a JPEG included.
+                return $this->fitsAJpeg($this->packet($marking)) ? $marking : new Marking($sourceType, null, $generatedAt);
             }
 
             $offset = $end;
@@ -244,14 +259,18 @@ final readonly class ImageMarker
         return [str_contains($bytes, 'urn:c2pa:'), null];
     }
 
+    /**
+     * Whether a packet fits the one APP1 segment a JPEG gives XMP: the segment holds 0xFFFD bytes after
+     * its length, and the signature that names XMP comes first.
+     */
+    private function fitsAJpeg(string $packet): bool
+    {
+        return strlen(self::JPEG_XMP.$packet) <= 0xFFFD;
+    }
+
     private function intoJpeg(string $image, string $packet): string
     {
         $payload = self::JPEG_XMP.$packet;
-
-        if (strlen($payload) > 0xFFFD) {
-            throw new InvalidArgumentException('The marking is longer than the one APP1 segment a JPEG gives XMP. Shorten the generator.');
-        }
-
         $leading = '';
         $following = '';
         $offset = 2;
@@ -397,15 +416,11 @@ final readonly class ImageMarker
 
     private function throughImagick(string $image, string $packet): string
     {
-        try {
-            $imagick = new Imagick;
-            $imagick->readImageBlob($image);
+        return $this->decoder->decode($image, static function (Imagick $imagick) use ($packet): string {
             $imagick->profileImage('xmp', $packet);
 
             return $imagick->getImagesBlob();
-        } catch (ImagickException $exception) {
-            throw new InvalidArgumentException('The bytes are no image Imagick can read: '.$exception->getMessage(), 0, $exception);
-        }
+        });
     }
 
     /**

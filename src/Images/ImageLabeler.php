@@ -6,7 +6,6 @@ namespace Pushery\AiContentMarking\Images;
 
 use Imagick;
 use ImagickDraw;
-use ImagickException;
 use ImagickPixel;
 use InvalidArgumentException;
 use Pushery\AiContentMarking\Marking;
@@ -23,6 +22,9 @@ use UnexpectedValueException;
  * again, which keeps no XMP, so the marking is written into the result afterwards, as ImageMarker
  * writes it. An image whose source type the configured notice does not show gets the marking and no
  * label, as the label component renders none for it.
+ *
+ * Imagick reads only what ImageDecoder lets through: a JPEG, a PNG, a WebP or a TIFF, of no more
+ * pixels than the decoder takes.
  */
 final readonly class ImageLabeler
 {
@@ -32,12 +34,16 @@ final readonly class ImageLabeler
     /** The least height of the label, in pixels. */
     public const int SMALLEST = 16;
 
-    public function __construct(private ImageMarker $marker, private Notice $notice) {}
+    public function __construct(
+        private ImageMarker $marker,
+        private Notice $notice,
+        private ImageDecoder $decoder = new ImageDecoder,
+    ) {}
 
     /**
      * Draws the label into the image at the path and writes the marking into it.
      *
-     * @throws InvalidArgumentException when there is no file, or no image Imagick can read
+     * @throws InvalidArgumentException when there is no file, or no image the decoder lets Imagick read
      * @throws UnexpectedValueException when the image does not hold the marking once written
      */
     public function stamp(string $path, Marking $marking): void
@@ -54,7 +60,8 @@ final readonly class ImageLabeler
     /**
      * The bytes of an image with the label drawn into them and the marking written into them.
      *
-     * @throws InvalidArgumentException when the bytes are no image Imagick can read
+     * @throws InvalidArgumentException when the bytes are in none of the formats the decoder takes, hold
+     *                                  more pixels than it takes, or are no image Imagick can read
      * @throws UnexpectedValueException when the image does not hold the marking once written
      */
     public function stamped(string $image, Marking $marking): string
@@ -63,14 +70,11 @@ final readonly class ImageLabeler
             return $this->marker->mark($image, $marking);
         }
 
-        try {
-            $imagick = new Imagick;
-            $imagick->readImageBlob($image);
+        $drawn = $this->decoder->decode($image, function (Imagick $imagick): string {
             $imagick->drawImage($this->drawing($imagick->getImageWidth()));
-            $drawn = $imagick->getImageBlob();
-        } catch (ImagickException $exception) {
-            throw new InvalidArgumentException('The bytes are no image Imagick can read: '.$exception->getMessage(), 0, $exception);
-        }
+
+            return $imagick->getImageBlob();
+        });
 
         return $this->marker->mark($drawn, $marking);
     }

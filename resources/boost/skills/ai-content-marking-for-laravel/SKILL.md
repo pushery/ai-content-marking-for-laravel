@@ -68,7 +68,10 @@ migrations and no routes.
    listing tile included. `beside="none"` renders the acronym alone. Where the image goes into a
    mail or a download, draw the label into it with
    `app(Pushery\AiContentMarking\Images\ImageLabeler::class)->stamp($path, $marking)`, which writes
-   the marking into the result again.
+   the marking into the result again. The drawn label is pixels and has no name, so end the
+   image's `alt` text with the sentence of the notice,
+   `app(Pushery\AiContentMarking\Notice::class)->label($marking)`, which is `null` where no notice
+   is due.
 7. For a mail, return `new Headers(text: MailMarking::headers($marking))` from the mailable's
    `headers()`, or add the field in `withSymfonyMessage()`. `MailMarkingReader` reads it back and
    names the DKIM signatures that list it.

@@ -8,6 +8,7 @@ use Closure;
 use DateTimeImmutable;
 use DateTimeInterface;
 use DOMDocument;
+use DOMDocumentType;
 use DOMElement;
 use InvalidArgumentException;
 use Pushery\AiContentMarking\DigitalSourceType;
@@ -216,9 +217,9 @@ final readonly class DocumentMarker
         }
 
         // No part of an Office Open XML document declares a document type, and a declaration is where an entity that
-        // expands to gigabytes would be defined, so one is refused before anything parses it.
+        // expands to gigabytes would be defined, so one in the bytes of the part is refused before anything parses it.
         if (stripos($xml, '<!DOCTYPE') !== false) {
-            throw new InvalidArgumentException("The part {$name} of the document declares a document type, which no part of an Office Open XML document carries.");
+            throw $this->declaresADocumentType($name);
         }
 
         $document = new DOMDocument;
@@ -231,11 +232,23 @@ final readonly class DocumentMarker
             libxml_use_internal_errors($previous);
         }
 
+        // A part may also be written in UTF-16, where every character of the declaration takes two bytes and the
+        // search above does not see it. The parser has read it without replacing an entity, and it is refused here.
+        if ($document->doctype instanceof DOMDocumentType) {
+            throw $this->declaresADocumentType($name);
+        }
+
         if ($loaded === false || ! $document->documentElement instanceof DOMElement) {
             throw new InvalidArgumentException("The part {$name} of the document is no well-formed XML.");
         }
 
         return $document;
+    }
+
+    /** The refusal of a part that declares a document type, which no part of an Office Open XML document carries. */
+    private function declaresADocumentType(string $name): InvalidArgumentException
+    {
+        return new InvalidArgumentException("The part {$name} of the document declares a document type, which no part of an Office Open XML document carries.");
     }
 
     /** @throws RuntimeException when the archive refuses the part */
@@ -392,6 +405,10 @@ final readonly class DocumentMarker
         return $children;
     }
 
+    /**
+     * The root element of a part. Every document handed here has one: part() refuses a part without, and the
+     * custom properties made for a document that had none start with theirs.
+     */
     private function root(DOMDocument $document): DOMElement
     {
         return $document->documentElement ?? throw new InvalidArgumentException('A part of the document has no root element.');

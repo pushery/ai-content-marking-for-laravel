@@ -33,11 +33,17 @@ final class MailMarking
     /** The name of the header field that carries a marking. */
     public const string HEADER = 'Digital-Source-Type';
 
-    /** A parameter value that needs no quotes: a token in the sense of RFC 2045. */
-    private const string TOKEN = '/^[\x21\x23-\x27\x2A\x2B\x2D\x2E\x30-\x39\x41-\x5A\x5E-\x7E]+$/';
+    /**
+     * A parameter value that needs no quotes: a token in the sense of RFC 2045. The pattern ends on
+     * `\z`, the end of the value, because `$` also matches in front of a line feed that ends it.
+     */
+    private const string TOKEN = '/^[\x21\x23-\x27\x2A\x2B\x2D\x2E\x30-\x39\x41-\x5A\x5E-\x7E]+\z/';
 
-    /** A parameter value that can stand in quotes as it is: printable ASCII without `"` and `\`. */
-    private const string QUOTABLE = '/^[\x20\x21\x23-\x5B\x5D-\x7E]*$/';
+    /**
+     * A parameter value that can stand in quotes as it is: printable ASCII without `"` and `\`,
+     * up to `\z` for the same reason.
+     */
+    private const string QUOTABLE = '/^[\x20\x21\x23-\x5B\x5D-\x7E]*\z/';
 
     /** The longest stretch of a parameter value that is written in one piece. */
     private const int SECTION_LENGTH = 60;

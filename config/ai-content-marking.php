@@ -56,6 +56,25 @@ return [
 
     ],
 
+    'images' => [
+
+        /*
+        | The most pixels an image may hold, over all its frames, for ImageMarker and
+        | ImageLabeler to let Imagick decode it: 100 megapixels by default. The size is
+        | read from the headers of the image, and a larger one is refused with an
+        | InvalidArgumentException before a pixel is decoded. ImageMarker writes into a
+        | JPEG, a PNG and a WebP without decoding it, so for those the ceiling holds
+        | where ImageLabeler draws into them.
+        |
+        | Read typed, not cast, and held to a floor of one pixel. A value that is no
+        | number, or one below the floor, keeps the default.
+        */
+        'max_pixels' => is_numeric($maxPixels = env('AI_CONTENT_MARKING_IMAGE_MAX_PIXELS')) && (int) $maxPixels >= 1
+            ? (int) $maxPixels
+            : 100_000_000,
+
+    ],
+
     /*
     |--------------------------------------------------------------------------
     | Model register

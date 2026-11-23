@@ -4,6 +4,14 @@ All notable changes to `pushery/ai-content-marking-for-laravel` are documented h
 
 A release carries only the sections that have an entry, in this order: `### ⚠️ Breaking`, `### ✨ Added`, `### 🔧 Changed`, `### ⚡ Performance`, `### 🐛 Fixed`, `### 🔒 Security`, `### 🧹 Deprecated`, `### 🗑️ Removed` and `### 📚 Documentation`.
 
+## [0.5.1] - 2026-11-23
+
+### 📚 Documentation
+
+- **The first example of the Boost skill sets the text it marks.** It passed `$response->text` from a variable nothing set, so code copied from it failed before it marked anything. It now starts from `$modelOutput`, as the README does.
+- **The package description fits a search result.** The description in `composer.json`, which Packagist shows as the description of the package page, ran past the roughly 160 characters a search result shows, so the result cut it off mid-sentence. It now says what the package does within that length.
+- **Two more pictures of text carry their text below them.** The output of exiftool on the images page and the custom properties on the documents page stood only in a picture, which a narrow screen shrinks below reading size and which text zoom, search and copying never reach. Each now follows as a code block.
+
 ## [0.5.0] - 2026-11-20
 
 ### 🔧 Changed
@@ -116,7 +124,8 @@ A release carries only the sections that have an entry, in this order: `### ⚠�
 
 Initial release. The package marks content made with generative AI in a Laravel application with the IPTC Digital Source Type: text as schema.org microdata, images as XMP that every media library conversion keeps, and mail as a header field a DKIM signature can cover. A Blade component shows readers a notice in seven languages, every marking can be read back, a test helper checks an application's image pipeline, and a report names each output that lacks the two layers of marking the European Commission's Code of Practice asks of text.
 
-[Unreleased]: https://github.com/pushery/ai-content-marking-for-laravel/compare/v0.5.0...HEAD
+[Unreleased]: https://github.com/pushery/ai-content-marking-for-laravel/compare/v0.5.1...HEAD
+[0.5.1]: https://github.com/pushery/ai-content-marking-for-laravel/compare/v0.5.0...v0.5.1
 [0.5.0]: https://github.com/pushery/ai-content-marking-for-laravel/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/pushery/ai-content-marking-for-laravel/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/pushery/ai-content-marking-for-laravel/compare/v0.2.0...v0.3.0

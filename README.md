@@ -17,7 +17,7 @@
 [![PHPStan: level 10](https://img.shields.io/badge/PHPStan-10-blue.svg)](https://phpstan.org)
 [![Code style: Pint](https://img.shields.io/badge/code%20style-pint-orange.svg)](https://laravel.com/docs/pint)
 
-Marks content made with generative AI in Laravel: machine-readable markers in the text your app delivers and in the images it stores, kept through every media library conversion, and a separate notice for readers that you place yourself.
+Marks content made with generative AI in Laravel: machine-readable markers in the text it delivers and the images it stores, and a notice you place for readers.
 
 ## Documentation
 
@@ -58,6 +58,17 @@ php artisan vendor:publish --tag=ai-content-marking-config
 This writes `config/ai-content-marking.php`, where every option is documented inline.
 
 The package ships no migrations and no routes.
+
+To change the package's views or its translations, publish them and edit the copies:
+
+```bash
+php artisan vendor:publish --tag=ai-content-marking-views
+php artisan vendor:publish --tag=ai-content-marking-lang
+```
+
+The views land in `resources/views/vendor/ai-content-marking` and the translations in
+`lang/vendor/ai-content-marking`, where Laravel reads them before the package's own.
+`--tag=ai-content-marking` publishes the configuration, the views and the translations at once.
 
 ## Usage
 
@@ -148,13 +159,13 @@ configuration stay in the development repository, so a clone of this repository 
 Please review the [security policy](SECURITY.md) and report vulnerabilities
 privately rather than opening a public issue.
 
-## Built by Pushery
+## Built by PUSHERY
 
-This package is built and maintained by [Pushery](https://www.pushery.com) — a
+This package is built and maintained by [PUSHERY](https://www.pushery.com) — a
 Berlin-based studio building Laravel applications, SaaS products, and open-source
 tools.
 
-Building a Laravel UI? [WireKit](https://www.wirekit.app) is Pushery's open-source
+Building a Laravel UI? [WireKit](https://www.wirekit.app) is PUSHERY's open-source
 Livewire component kit.
 Browse the rest of our work at [pushery.com](https://www.pushery.com).
 

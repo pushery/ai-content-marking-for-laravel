@@ -84,7 +84,9 @@ migrations and no routes.
 ```php
 use Pushery\AiContentMarking\MarkedText;
 
-$description = MarkedText::generated($response->text, generator: 'Support Desk', at: now(), model: 'example-writer', operator: 'Example Ltd');
+$modelOutput = 'A solid oak table that seats six.'; // the text a model wrote
+
+$description = MarkedText::generated($modelOutput, generator: 'Support Desk', at: now(), model: 'example-writer', operator: 'Example Ltd');
 ```
 
 ```blade

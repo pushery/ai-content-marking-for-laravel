@@ -1,7 +1,7 @@
 {
   "$schema": "https://getcomposer.org/schema.json",
   "name": "pushery/ai-content-marking-for-laravel",
-  "description": "Marks content made with generative AI in Laravel: machine-readable markers in the text your app delivers and in the images it stores, kept through every media library conversion, and a separate notice for readers that you place yourself.",
+  "description": "Marks content made with generative AI in Laravel: machine-readable markers in the text it delivers and the images it stores, and a notice you place for readers.",
   "keywords": [
     "ai",
     "ai-disclosure",
@@ -65,7 +65,7 @@
     "pestphp/pest-plugin-type-coverage": "^5.0",
     "phpstan/phpstan": "2.3.5",
     "phpstan/phpstan-deprecation-rules": "^2.0.5",
-    "pushery/sqlens-for-laravel": "^0.34.0",
+    "pushery/sqlens-for-laravel": "^0.35.1",
     "rector/rector": "^2.7.0",
     "spaze/phpstan-disallowed-calls": "^4.12",
     "symfony/yaml": "^7.4.17 || ^8.1.5"
